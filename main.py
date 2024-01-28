@@ -3,21 +3,7 @@ import os
 from urllib.parse import unquote
 from github_helper import *
 
-#Helpers
-#TEMPORARY (WILL UPDATE WHEN FULL STREAMING DATA IS OUT)
-def combine_streaming_history(data, typeInfo, file_name):
-    files = [i for i in data.keys() if i.startswith(file_name)]
-    streamingInfo = []
-    typeSpecificInfo = typeInfo[files[0]]
-
-    for file in files:
-        streamingInfo.extend(data[file])
-        del data[file]
-        del typeInfo[file]
-
-    data[file_name] = streamingInfo
-    typeInfo[file_name] = typeSpecificInfo
-
+#BASIC HELPERS
 def convert_local_file(song):
     htmlcode = song["localTrack"]["uri"]
     codedData = htmlcode[14:]
@@ -34,7 +20,24 @@ def convert_local_file(song):
         if len(info) == 4:
             break
     return {"trackName":info[3], "artistName":info[1], "albumName":info[2], "trackUri":info[0]}
-    
+
+
+#ADVANCED HELPERS   
+
+#TEMPORARY (WILL UPDATE WHEN FULL STREAMING DATA IS OUT)
+def combine_streaming_history(data, typeInfo, file_name):
+    files = [i for i in data.keys() if i.startswith(file_name)]
+    streamingInfo = []
+    typeSpecificInfo = typeInfo[files[0]]
+
+    for file in files:
+        streamingInfo.extend(data[file])
+        del data[file]
+        del typeInfo[file]
+
+    data[file_name] = streamingInfo
+    typeInfo[file_name] = typeSpecificInfo
+
 def clean_playlists(data, file_name):
     playlistList = data[file_name]["playlists"]
     playlistDict = {}
@@ -59,6 +62,26 @@ def clean_playlists(data, file_name):
 
     data[file_name] = playlistDict
     
+def adjust_artists(data, typeInfo, file_name):
+    typeInfo[file_name] = 'd'
+    artistDict = {}
+
+    for artist in data[file_name]:
+        artistDict[artist["artistName"]] = artist["segment"]
+
+    data[file_name] = artistDict
+
+
+#NON CORE FUNCTIONS
+
+def get_listening_types(artistDict):
+    types = []
+    
+    for i in artistDict.values():
+        if i not in types:
+            types.append(i)
+
+    return types
 
 
 #CORE FUNCTIONS
@@ -76,6 +99,7 @@ def get_constants():
 
     return constants
 
+#Renames Marquee into Artists
 #Get the data from the files (currently combining: streamed_music)
 def extract_data(folder_name, stream_file_names, silent=False):
     files = [i for i in os.listdir(folder_name) if i[-5:] == ".json"]
@@ -108,12 +132,22 @@ def extract_data(folder_name, stream_file_names, silent=False):
     
     for file_name in stream_file_names:
         combine_streaming_history(data, typeInfo, file_name)
+    
+    try:
+        data["Artists"] = data["Marquee"]
+        typeInfo["Artists"] = typeInfo["Marquee"]
+
+        del data["Marquee"]
+        del typeInfo["Marquee"]
+    except:
+        pass
 
     return data, typeInfo
 
 #Format the data structures correctly (currently formatting: playlists)
 def raw_data_handling(data, typeInfo, constants):
     clean_playlists(data, constants['Playlists'])
+    adjust_artists(data, typeInfo, "Artists")
 
 #Analyze Data
 def analysis(data, typeInfo):
@@ -132,13 +166,10 @@ def main():
     raw_data_handling(data, typeInfo, constants)
 
     #Begin Testing
-    playlists = data[pfile]
-    for k, v in playlists.items():
-        print(f"Playlist: {k}, Songs: {len(v[1])}")
-
-    for i in playlists["Vibes"][1]:
-        print(list(i.keys())[0])
-
+    listening_types = get_listening_types(data["Artists"])
+    print(listening_types)
+    #print([k for k, v in data["Artists"].items() if v == listening_types[0]])
+    #print(data["Artists"]["Vetrom"])
     #End Testing
 
     
