@@ -9,6 +9,3 @@ def update_gitignore(folder_name):
             f.write(folder_name+"/"+file+"\n")
         for file in pyfiles:
             f.write("__pycache__/"+file+"\n")
-
-
-

@@ -1,1 +1,3 @@
 Spotify_Data_Folder=Spotify_Account_Data
+Playlists=Playlist1
+Stream_History_Music=StreamingHistory_music
