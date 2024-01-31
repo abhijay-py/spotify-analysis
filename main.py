@@ -1,266 +1,15 @@
 import json
 import os
 import csv
-from urllib.parse import unquote
-from github_helper import *
-from zipfile import ZipFile
 
-#SUB HELPERS
-def _get_zip_data(filename, dataFolder, zipFolder, badFiles):
-    files = os.listdir()
+from Functions.file_management import *
+from Functions.data_management import *
+from Functions.custom_metrics import *
 
-    with ZipFile("./"+zipFolder+"/"+filename) as f:
-        f.extractall()
-    
-    newFiles = os.listdir()
-
-    try:
-        newFolder = [i for i in newFiles if i not in files][0]
-    except IndexError:
-        print("Temporary Folder from previous runs were not deleted.")
-    
-    if dataFolder not in files:
-        os.rename(newFolder, dataFolder)
-        
-    else:
-        folderFiles = os.listdir(newFolder)
-        for file in folderFiles:
-            try:
-                os.remove("./"+dataFolder+"/"+file)
-            except FileNotFoundError:
-                pass
-            os.rename("./"+newFolder+"/"+file, "./"+dataFolder+"/"+file)
-        os.rmdir(newFolder)
-
-    folderFiles = os.listdir(dataFolder)
-    for file in folderFiles:
-        if badFiles == file[:len(badFiles)]:
-            os.remove("./"+dataFolder+"/"+file)
-            continue
-
-#BASIC HELPERS
-def convert_local_file(song):
-    htmlcode = song["localTrack"]["uri"]
-    codedData = htmlcode[14:]
-    info = [htmlcode]
-
-    savedText = ""
-    for c in codedData:
-        if c == ':':
-            info.append(unquote(savedText).replace("+", " "))
-            savedText = ""
-        else:
-            savedText += c
-        
-        if len(info) == 4:
-            break
-    return {"trackName":info[3], "artistName":info[1], "albumName":info[2], "trackUri":info[0]}
-
-def save_to_csv(info, typeChar, output_file, reverse=False):
-    if typeChar == 'll':
-        with open("./Spotify_Analysis_Files/"+output_file, 'w', newline='', encoding="utf-8-sig") as f:
-            csv_f = csv.writer(f)
-            if not reverse:
-                csv_f.writerows()
-            else:
-                for i in range(len(info) - 1, -1, -1):
-                    csv_f.writerow(info[i])
-
-#Modify print into log file
-def get_data_from_zip(constants):
-    folder = constants["Spotify_Zip_Folder"]
-    folderFiles = os.listdir(folder)
-    for file in folderFiles:
-        if file[-4:] != ".zip":
-            print("Non zipfile in zipfile folder.")
-            continue
-        _get_zip_data(file, constants["Spotify_Data_Folder"], constants["Spotify_Zip_Folder"], constants["Remove_Files"])
-
-#Removes all files that were extracted.
-def remove_account_data(constants):
-    folder = constants["Spotify_Data_Folder"]
-    folderFiles = os.listdir(folder)
-    for file in folderFiles:
-        os.remove("./"+folder+"/"+file)
-    os.rmdir(folder)
-
-#Removes all csv files created.
-def remove_account_analysis(constants):
-    pass
-
-#ADVANCED HELPERS   
-
-def combine_streaming_history(data, typeInfo, file_name):
-    files = [i for i in data.keys() if i.startswith(file_name)]
-    streamingInfo = []
-    typeSpecificInfo = typeInfo[files[0]]
-
-    for file in files:
-        streamingInfo.extend(data[file])
-        del data[file]
-        del typeInfo[file]
-
-    data[file_name] = streamingInfo
-    typeInfo[file_name] = typeSpecificInfo
-
-def clean_playlists(data, file_name):
-    playlistList = data[file_name]["playlists"]
-    playlistDict = {}
-    for i in playlistList:
-        name = i['name']
-        date = i['lastModifiedDate']
-        items = i['items']
-        newItems = []
-        
-        for song in items:
-            trackDict = {}
-            track = song["track"]
-
-            if track is None:
-                track = convert_local_file(song)
-
-            addedDate = song["addedDate"] #convert into datetime object??? IDK
-            trackDict[track["trackName"]] = {"artistName":track["artistName"], "albumName":track["albumName"], "trackUri":track["trackUri"], "episode":song["episode"], "localTrack":song["localTrack"], "addedDate":addedDate}
-            newItems.append(trackDict)
-
-        playlistDict[name] = (date, newItems)
-
-    data[file_name] = playlistDict
-    
-def adjust_artists(data, typeInfo, file_name):
-    typeInfo[file_name] = 'd'
-    artistDict = {}
-
-    for artist in data[file_name]:
-        artistDict[artist["artistName"]] = artist["segment"]
-
-    data[file_name] = artistDict
-
-def clean_streaming_audio(data, file_name):
-    songs = data[file_name]
-    newSongs = []
-
-    for song in songs:
-        newSong = {}
-
-        try:
-            client = unquote(song['user_agent_decrypted'])
-        except:
-            client = None
-        
-        if song['ms_played'] == 0:
-            continue
-
-        coreData = {'trackName':song['master_metadata_track_name'], 'artistName':song['master_metadata_album_artist_name'], 'albumName':song['master_metadata_album_album_name'], 'trackUri':song['spotify_track_uri']}
-        streamData = {'timestamp':song['ts'], 'platform':song['platform'], 'country':song['conn_country'], 'ip':song['ip_addr_decrypted'], 'client':client, 
-                        'offline':song['offline'], 'offline_timestamp':song['offline_timestamp'], 'incognito_mode':song['incognito_mode']}
-        episodeData = {'episode_name':song['episode_name'], 'episode_show':song['episode_show_name'], 'episodeUri':song['spotify_episode_uri']}
-        playData = {'ms_played':song['ms_played'], 'reason_start':song['reason_start'], 'reason_end':song['reason_end'], 'shuffle':song['shuffle'], 'skipped':song['skipped']}
-
-        newSong["main_data"] = coreData
-        newSong["streaming_info"] = streamData
-        newSong["episode_details"] = episodeData
-        newSong["play_info"] = playData
-
-        newSongs.append(newSong)
-
-    data[file_name] = newSongs
-
-
-#NON CORE FUNCTIONS
-
-def get_listening_types(artistDict):
-    types = []
-    
-    for i in artistDict.values():
-        if i not in types:
-            types.append(i)
-
-    return types
-
-def get_all_time_song_info(data, file_name):
-    total = 0
-    uriTracker = {}
-    reversereference = {}
-    realreference = {}
-
-    for song in data['Streaming_History_Audio']:
-        core_data = song['main_data']
-        play_info = song['play_info']
-
-        uri = core_data['trackUri']
-        name = core_data['trackName']
-        artist = core_data['artistName']
-        album = core_data['albumName']
-        ms_played = play_info['ms_played']
-
-        if song['episode_details']['episode_name']:
-            continue
-
-        total += ms_played
-
-        if name == None or artist == None:
-            continue
-        
-        if name + artist in reversereference.keys():
-            uri = reversereference[name+artist]
-        else:
-            realreference[uri] = (name, artist, album)
-            reversereference[name+artist] = uri
-
-        
-        if uri not in uriTracker.keys():
-            uriTracker[uri] = ms_played
-        else:
-            uriTracker[uri] += ms_played
-
-    sortedStuff = sorted(uriTracker.items(), key=lambda x:x[1])
-    sortedBetter = [(realreference[i][0], j, realreference[i][1], realreference[i][2], i) for i, j in sortedStuff]
-    
-    return sortedBetter, total
-
-def get_all_time_artist_info(data, file_name):
-    songs, total = get_all_time_song_info(data, file_name)
-    artists = {}
-
-    for song in songs:
-        artist = song[2]
-        ms_listened = song[1]
-
-        if artist in artists.keys():
-            artists[artist] += ms_listened
-        else:
-            artists[artist] = ms_listened
-
-    sortedStuff = sorted(artists.items(), key=lambda x:x[1])
-
-    return sortedStuff
-
-def get_all_time_album_info(data, file_name):
-    songs, total = get_all_time_song_info(data, file_name)
-    albums = {}
-    albumToArtist = {}
-
-    for song in songs:
-        album = song[3]
-        artist = song[2]
-        ms_listened = song[1]
-
-        albumToArtist[album] = artist
-
-        if album in albums.keys():
-            albums[album] += ms_listened
-        else:
-            albums[album] = ms_listened
-
-    sortedStuff = sorted(albums.items(), key=lambda x:x[1])
-    sortedBetter = [(i, j, albumToArtist[i]) for i, j in sortedStuff]
-
-    return sortedBetter
 
 #CORE FUNCTIONS
 
-#Get constants from a file
+#Get constants from a file 
 def get_constants():
     constants = {}
 
@@ -333,38 +82,42 @@ def raw_data_handling(data, typeInfo, storageFile=None):
     adjust_artists(data, typeInfo, "Artists")
     clean_streaming_audio(data, "Streaming_History_Audio")
 
-#Analyze Data
+#TODO: Analyze Data (might delete and just create funcctions in custom_metrics to be called in main)
 def analysis(data, typeInfo, file=None):
     pass
 
 
 
 def main():
+    #Get Constants from a file
     constants = get_constants()
 
+    #Different constants
     streamFiles = [constants["Stream_History_Music"], constants["Stream_History_Video"]]
     spotifyDataFolder = constants["Spotify_Data_Folder"]
     pfile = constants['Playlists']
 
+    #Extract data from zip
     get_data_from_zip(constants)
 
+    #Got data into two dictionaries with the data and data structure type (typeInfo might be useless, but i left it incase future needs)
     data, typeInfo = extract_data(spotifyDataFolder, pfile, streamFiles, silent=True)
+    #Fixed raw json data into better data structures
     raw_data_handling(data, typeInfo)
 
+    #Begin Testing (used to seperate standard code from testing)
+
+    #Got the raw song, artist, album rankings and total amount of timme listened all in ms
     raw_songs, total = get_all_time_song_info(data, constants["Stream_History_Music"])
     raw_artists = get_all_time_artist_info(data, constants["Stream_History_Music"])
     raw_albums = get_all_time_album_info(data, constants["Stream_History_Music"])
 
+    #Converting everything into minutes (songs, artists, albums)
     songs = [(i[0], round(i[1]/60)/1000.0, i[2]) for i in raw_songs]
     artists = [(i, round(j/60)/1000.0) for i, j in raw_artists]
     albums = [(i[0], round(i[1]/60)/1000.0, i[2]) for i in raw_albums]
 
-    #Begin Testing
-    
     #End Testing
-
-    update_gitignore(spotifyDataFolder)
-
 
 if __name__ == "__main__":
     main()
