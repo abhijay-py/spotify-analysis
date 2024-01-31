@@ -3,6 +3,40 @@ import os
 import csv
 from urllib.parse import unquote
 from github_helper import *
+from zipfile import ZipFile
+
+#SUB HELPERS
+def _get_zip_data(filename, dataFolder, zipFolder, badFiles):
+    files = os.listdir()
+
+    with ZipFile("./"+zipFolder+"/"+filename) as f:
+        f.extractall()
+    
+    newFiles = os.listdir()
+
+    try:
+        newFolder = [i for i in newFiles if i not in files][0]
+    except IndexError:
+        print("Temporary Folder from previous runs were not deleted.")
+    
+    if dataFolder not in files:
+        os.rename(newFolder, dataFolder)
+        
+    else:
+        folderFiles = os.listdir(newFolder)
+        for file in folderFiles:
+            try:
+                os.remove("./"+dataFolder+"/"+file)
+            except FileNotFoundError:
+                pass
+            os.rename("./"+newFolder+"/"+file, "./"+dataFolder+"/"+file)
+        os.rmdir(newFolder)
+
+    folderFiles = os.listdir(dataFolder)
+    for file in folderFiles:
+        if badFiles == file[:len(badFiles)]:
+            os.remove("./"+dataFolder+"/"+file)
+            continue
 
 #BASIC HELPERS
 def convert_local_file(song):
@@ -24,7 +58,7 @@ def convert_local_file(song):
 
 def save_to_csv(info, typeChar, output_file, reverse=False):
     if typeChar == 'll':
-        with open(".\\Spotify_Analysis_Files\\"+output_file+".csv", 'w', newline='', encoding="utf-8-sig") as f:
+        with open("./Spotify_Analysis_Files/"+output_file, 'w', newline='', encoding="utf-8-sig") as f:
             csv_f = csv.writer(f)
             if not reverse:
                 csv_f.writerows()
@@ -32,10 +66,30 @@ def save_to_csv(info, typeChar, output_file, reverse=False):
                 for i in range(len(info) - 1, -1, -1):
                     csv_f.writerow(info[i])
 
+#Modify print into log file
+def get_data_from_zip(constants):
+    folder = constants["Spotify_Zip_Folder"]
+    folderFiles = os.listdir(folder)
+    for file in folderFiles:
+        if file[-4:] != ".zip":
+            print("Non zipfile in zipfile folder.")
+            continue
+        _get_zip_data(file, constants["Spotify_Data_Folder"], constants["Spotify_Zip_Folder"], constants["Remove_Files"])
+
+#Removes all files that were extracted.
+def remove_account_data(constants):
+    folder = constants["Spotify_Data_Folder"]
+    folderFiles = os.listdir(folder)
+    for file in folderFiles:
+        os.remove("./"+folder+"/"+file)
+    os.rmdir(folder)
+
+#Removes all csv files created.
+def remove_account_analysis(constants):
+    pass
 
 #ADVANCED HELPERS   
 
-#TEMPORARY (WILL UPDATE WHEN FULL STREAMING DATA IS OUT)
 def combine_streaming_history(data, typeInfo, file_name):
     files = [i for i in data.keys() if i.startswith(file_name)]
     streamingInfo = []
@@ -227,7 +281,7 @@ def extract_data(folder_name, playlistFile, stream_file_names, silent=False):
     typeInfo = {}
 
     for file in files:
-        with open(".\\"+folder_name+"\\"+file, "r", encoding="utf8") as f:
+        with open("./"+folder_name+"/"+file, "r", encoding="utf8") as f:
             if not silent:
                 print(f"Processing {file}.")
             
@@ -273,7 +327,7 @@ def extract_data(folder_name, playlistFile, stream_file_names, silent=False):
 
     return data, typeInfo
 
-#Format the data structures correctly (currently formatting: playlists)
+#Format the data structures correctly (currently formatting: playlists, artists, streamed_music)
 def raw_data_handling(data, typeInfo, storageFile=None):
     clean_playlists(data, 'Playlists')
     adjust_artists(data, typeInfo, "Artists")
@@ -292,6 +346,8 @@ def main():
     spotifyDataFolder = constants["Spotify_Data_Folder"]
     pfile = constants['Playlists']
 
+    get_data_from_zip(constants)
+
     data, typeInfo = extract_data(spotifyDataFolder, pfile, streamFiles, silent=True)
     raw_data_handling(data, typeInfo)
 
@@ -304,9 +360,7 @@ def main():
     albums = [(i[0], round(i[1]/60)/1000.0, i[2]) for i in raw_albums]
 
     #Begin Testing
-    save_to_csv(songs, 'll', 'songs', reverse=True)
-    save_to_csv(artists, 'll', 'artists', reverse=True)
-    save_to_csv(albums, 'll', 'albums', reverse=True)
+    
     #End Testing
 
     update_gitignore(spotifyDataFolder)

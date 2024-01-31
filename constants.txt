@@ -1,4 +1,6 @@
 Spotify_Data_Folder=Spotify_Account_Data
+Spotify_Zip_Folder=Spotify_Zipfiles
 Playlists=Playlist1
 Stream_History_Music=Streaming_History_Audio
 Stream_History_Video=Streaming_History_Video
+Remove_Files=StreamingHistory
