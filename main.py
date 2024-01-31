@@ -24,7 +24,7 @@ def convert_local_file(song):
 
 def save_to_csv(info, typeChar, output_file, reverse=False):
     if typeChar == 'll':
-        with open(".\\Spotify_Analysis_Files\\"+output_file+".csv", 'w', encoding="utf8") as f:
+        with open(".\\Spotify_Analysis_Files\\"+output_file+".csv", 'w', newline='', encoding="utf-8-sig") as f:
             csv_f = csv.writer(f)
             if not reverse:
                 csv_f.writerows()
@@ -181,7 +181,28 @@ def get_all_time_artist_info(data, file_name):
     sortedStuff = sorted(artists.items(), key=lambda x:x[1])
 
     return sortedStuff
-    
+
+def get_all_time_album_info(data, file_name):
+    songs, total = get_all_time_song_info(data, file_name)
+    albums = {}
+    albumToArtist = {}
+
+    for song in songs:
+        album = song[3]
+        artist = song[2]
+        ms_listened = song[1]
+
+        albumToArtist[album] = artist
+
+        if album in albums.keys():
+            albums[album] += ms_listened
+        else:
+            albums[album] = ms_listened
+
+    sortedStuff = sorted(albums.items(), key=lambda x:x[1])
+    sortedBetter = [(i, j, albumToArtist[i]) for i, j in sortedStuff]
+
+    return sortedBetter
 
 #CORE FUNCTIONS
 
@@ -276,13 +297,16 @@ def main():
 
     raw_songs, total = get_all_time_song_info(data, constants["Stream_History_Music"])
     raw_artists = get_all_time_artist_info(data, constants["Stream_History_Music"])
+    raw_albums = get_all_time_album_info(data, constants["Stream_History_Music"])
 
     songs = [(i[0], round(i[1]/60)/1000.0, i[2]) for i in raw_songs]
     artists = [(i, round(j/60)/1000.0) for i, j in raw_artists]
+    albums = [(i[0], round(i[1]/60)/1000.0, i[2]) for i in raw_albums]
 
     #Begin Testing
     save_to_csv(songs, 'll', 'songs', reverse=True)
     save_to_csv(artists, 'll', 'artists', reverse=True)
+    save_to_csv(albums, 'll', 'albums', reverse=True)
     #End Testing
 
     update_gitignore(spotifyDataFolder)
