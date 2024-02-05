@@ -55,7 +55,7 @@ def get_all_time_album_info(data, file_name):
 
     return sortedBetter
 
-#TODO: Erroring on LIFE AFTER SALEM (says played 0). Either uri was never listened to by user or some programming error occured. Report any similar issues. Erroring generally overall (says a song is played more than the most played song)
+#TODO: Erroring on LIFE AFTER SALEM (says played 0). Either uri was never listened to by user or some programming error occured. 
 #Returns list of (PlaylistName, ms_listened, song_ranking, artist_ranking, album_ranking) (sorted from least listened to most) (Duplicated songs and Local Files will not be included in total)
 def get_playlist_info(data, song_file_name):
     playtimeUriIndexing, similarUriIndexing = uri_indexing(data, song_file_name)
@@ -76,9 +76,6 @@ def get_playlist_info(data, song_file_name):
             artist = songInfo['artistName']
             album = songInfo['albumName']
 
-            if songName == 'LIFE AFTER SALEM':
-                print(uri)
-
             if uri not in similarUriIndexing.keys():
                 songs.append((songName, 0))
                 if artist not in artists.keys():
@@ -86,8 +83,10 @@ def get_playlist_info(data, song_file_name):
                 if album not in albums.keys():
                     albums[album] = 0
                 continue
-            if uri in mainUris:
+            if playtimeUriIndexing[uri] in mainUris:
                 continue
+            else:
+                mainUris.append(playtimeUriIndexing[uri])
 
             duration = playtimeUriIndexing[uri]
             totalTime += duration
@@ -106,7 +105,7 @@ def get_playlist_info(data, song_file_name):
         
         finalArtists = [(i, j) for i, j in artists.items()]
         finalAlbums = [(i, j) for i, j in albums.items()]
-
+        
         sortedSongs = sorted(songs, key=lambda x:x[1])
         sortedArtists = sorted(finalArtists, key=lambda x:x[1])
         sortedAlbums = sorted(finalAlbums, key=lambda x:x[1])

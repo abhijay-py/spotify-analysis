@@ -107,7 +107,8 @@ def main():
 
     #Begin Testing (used to seperate standard code from testing)
     playlist_info = get_playlist_info(data, constants["Stream_History_Music"])
-    print(playlist_info['Vibes'][1][-10:])
+    playlist_out = [(i, round(j/60)/1000.0) for i, j in playlist_info['Vibes'][1][-10:]][::-1]
+    print(playlist_out)
 
     #Got the raw song, artist, album rankings and total amount of timme listened all in ms
     raw_songs, total = get_all_time_song_info(data, constants["Stream_History_Music"])
