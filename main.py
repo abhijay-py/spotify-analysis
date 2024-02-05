@@ -98,7 +98,7 @@ def main():
     pfile = constants['Playlists']
 
     #Extract data from zip
-    get_data_from_zip(constants)
+    #get_data_from_zip(constants)
 
     #Got data into two dictionaries with the data and data structure type (typeInfo might be useless, but i left it incase future needs)
     data, typeInfo = extract_data(spotifyDataFolder, pfile, streamFiles, silent=True)
@@ -106,6 +106,8 @@ def main():
     raw_data_handling(data, typeInfo)
 
     #Begin Testing (used to seperate standard code from testing)
+    playlist_info = get_playlist_info(data, constants["Stream_History_Music"])
+    print(playlist_info['Vibes'][1][-10:])
 
     #Got the raw song, artist, album rankings and total amount of timme listened all in ms
     raw_songs, total = get_all_time_song_info(data, constants["Stream_History_Music"])

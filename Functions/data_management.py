@@ -100,3 +100,68 @@ def clean_streaming_audio(data, file_name):
 
     data[file_name] = newSongs
 
+#Gets the streaming data into a better format for metrics
+def song_info_extraction(data, file_name):
+    total = 0
+    uriTracker = {}
+    reversereference = {}
+    realreference = {}
+    otherUris = {}
+
+    for song in data['Streaming_History_Audio']:
+        core_data = song['main_data']
+        play_info = song['play_info']
+
+        uri = core_data['trackUri']
+        name = core_data['trackName']
+        artist = core_data['artistName']
+        album = core_data['albumName']
+        ms_played = play_info['ms_played']
+
+        if song['episode_details']['episode_name']:
+            continue
+
+        total += ms_played
+
+        if name == None or artist == None:
+            continue
+        
+        if name + artist in reversereference.keys():
+            if uri not in otherUris[reversereference[name+artist]]:
+                otherUris[reversereference[name+artist]].append(uri)
+            uri = reversereference[name+artist]
+        else:
+            otherUris[uri] = []
+            realreference[uri] = (name, artist, album)
+            reversereference[name+artist] = uri
+
+        
+        if uri not in uriTracker.keys():
+            uriTracker[uri] = ms_played
+        else:
+            uriTracker[uri] += ms_played
+
+    sortedStuff = sorted(uriTracker.items(), key=lambda x:x[1])
+    sortedBetter = [(realreference[i][0], j, realreference[i][1], realreference[i][2], i, otherUris[i]) for i, j in sortedStuff]
+
+    return sortedBetter, total
+
+#Returns two dictionaries associating uris with the primary uri and the songs playtime
+def uri_indexing(data, song_file_name):
+    songs, total = song_info_extraction(data, song_file_name)
+    playtimeUriIndexing = {}
+    similarUriIndexing = {}
+
+    for song in songs:
+        mainUri = song[4]
+        otherUris = song[5]
+        playtime = song[1]
+
+        playtimeUriIndexing[mainUri] = playtime
+        similarUriIndexing[mainUri] = mainUri
+
+        for uri in otherUris:
+            playtimeUriIndexing[uri] = playtime
+            similarUriIndexing[uri] = mainUri
+            
+    return playtimeUriIndexing, similarUriIndexing
