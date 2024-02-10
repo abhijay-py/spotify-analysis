@@ -120,6 +120,8 @@ def main():
     artists = [(i, round(j/60)/1000.0) for i, j in raw_artists]
     albums = [(i[0], round(i[1]/60)/1000.0, i[2]) for i in raw_albums]
 
+    save_to_csv(songs, 'll', "songs.csv", reverse=True)
+
     #End Testing
 
 if __name__ == "__main__":

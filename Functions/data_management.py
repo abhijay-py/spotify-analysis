@@ -100,7 +100,7 @@ def clean_streaming_audio(data, file_name):
 
     data[file_name] = newSongs
 
-#Gets the streaming data into a better format for metrics
+#Gets the streaming data into a better format for metrics. For each song, return (Name, Listening Time, Artist, Album, Primary Uri, Related Uris)
 def song_info_extraction(data, file_name):
     total = 0
     uriTracker = {}
@@ -146,22 +146,26 @@ def song_info_extraction(data, file_name):
 
     return sortedBetter, total
 
-#Returns two dictionaries associating uris with the primary uri and the songs playtime
+#Returns two dictionaries associating uris with the primary uri and the songs playtime. Also returns a reverse reference dict for name+artist to mainuri.
 def uri_indexing(data, song_file_name):
     songs, total = song_info_extraction(data, song_file_name)
     playtimeUriIndexing = {}
     similarUriIndexing = {}
-
+    reverseUriIndexing = {}
+    mainUriTHISONE = ""
     for song in songs:
         mainUri = song[4]
         otherUris = song[5]
         playtime = song[1]
+        name = song[0]
+        artist = song[2]
 
         playtimeUriIndexing[mainUri] = playtime
         similarUriIndexing[mainUri] = mainUri
+        reverseUriIndexing[name+artist] = mainUri
 
         for uri in otherUris:
             playtimeUriIndexing[uri] = playtime
             similarUriIndexing[uri] = mainUri
             
-    return playtimeUriIndexing, similarUriIndexing
+    return playtimeUriIndexing, similarUriIndexing, reverseUriIndexing

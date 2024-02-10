@@ -43,10 +43,9 @@ def save_to_csv(info, typeChar, output_file, reverse=False):
         with open("./Spotify_Analysis_Files/"+output_file, 'w', newline='', encoding="utf-8-sig") as f:
             csv_f = csv.writer(f)
             if not reverse:
-                csv_f.writerows()
+                csv_f.writerows(info)
             else:
-                for i in range(len(info) - 1, -1, -1):
-                    csv_f.writerow(info[i])
+                csv_f.writerows(info[::-1])
 
 #TODO: Modify prints into a log file
 #Extract spotify data from all zipfiles in the zipfile folder

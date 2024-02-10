@@ -55,12 +55,11 @@ def get_all_time_album_info(data, file_name):
 
     return sortedBetter
 
-#TODO: Erroring on LIFE AFTER SALEM (says played 0). Either uri was never listened to by user or some programming error occured. 
-#Returns list of (PlaylistName, ms_listened, song_ranking, artist_ranking, album_ranking) (sorted from least listened to most) (Duplicated songs and Local Files will not be included in total)
+#Returns Dict with key playlistname and values of (ms_listened, song_ranking, artist_ranking, album_ranking) (Duplicated songs and Local Files will not be included in total)
 def get_playlist_info(data, song_file_name):
-    playtimeUriIndexing, similarUriIndexing = uri_indexing(data, song_file_name)
+    playtimeUriIndexing, similarUriIndexing, reverseUriIndexing = uri_indexing(data, song_file_name)
     playlists = {}
-
+       
     for playlistName, info in data['Playlists'].items():
         mainUris = []
         totalTime = 0
@@ -77,16 +76,19 @@ def get_playlist_info(data, song_file_name):
             album = songInfo['albumName']
 
             if uri not in similarUriIndexing.keys():
-                songs.append((songName, 0))
-                if artist not in artists.keys():
-                    artists[artist] = 0
-                if album not in albums.keys():
-                    albums[album] = 0
-                continue
-            if playtimeUriIndexing[uri] in mainUris:
+                if songName+artist in reverseUriIndexing.keys():
+                    uri = reverseUriIndexing[songName+artist]
+                else:
+                    songs.append((songName, 0))
+                    if artist not in artists.keys():
+                        artists[artist] = 0
+                    if album not in albums.keys():
+                        albums[album] = 0
+                    continue
+            if similarUriIndexing[uri] in mainUris:
                 continue
             else:
-                mainUris.append(playtimeUriIndexing[uri])
+                mainUris.append(similarUriIndexing[uri])
 
             duration = playtimeUriIndexing[uri]
             totalTime += duration
