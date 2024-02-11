@@ -87,7 +87,31 @@ def analysis(data, typeInfo, file=None):
     pass
 
 
+#HTML WRAPPERS
 
+#Gets constant values to be called by other html functions
+def html_wrap_constants():
+    constants = get_constants()
+
+    #Different constants
+    streamFiles = [constants["Stream_History_Music"], constants["Stream_History_Video"]]
+    spotifyDataFolder = constants["Spotify_Data_Folder"]
+    pfile = constants['Playlists']
+
+    return constants, streamFiles, spotifyDataFolder, pfile
+
+#Posts top 10% song data on url/api/song_data
+def all_time_song_info_wrapper():
+    constants, streamFiles, spotifyDataFolder, pfile = html_wrap_constants()
+    data, typeInfo = extract_data(spotifyDataFolder, pfile, streamFiles, silent=True)
+    raw_data_handling(data, typeInfo)
+    #Got the raw song, artist, album rankings and total amount of timme listened all in ms
+    raw_songs, total = get_all_time_song_info(data, constants["Stream_History_Music"])
+    songs = [(i[0], round(i[1]/60)/1000.0, i[2]) for i in raw_songs][::-1]
+    song_slice = songs[:int(len(songs) * .1)]
+    return song_slice
+    
+    
 def main():
     #Get Constants from a file
     constants = get_constants()
