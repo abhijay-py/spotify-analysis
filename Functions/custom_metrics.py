@@ -1,7 +1,11 @@
 from Functions.data_management import song_info_extraction, uri_indexing
 
+#GET DATA INFO
+
 #Gets values of artistDict or the different levels of listner
-def get_listening_types(artistDict):
+def get_listening_types(data):
+    artistDict = data["Artists"]
+
     types = []
     
     for i in artistDict.values():
@@ -9,6 +13,26 @@ def get_listening_types(artistDict):
             types.append(i)
 
     return types
+
+#Gets types of stream start and end events 
+def get_stream_start_end_types(data, file_name):
+    streams = data[file_name]
+    start_types = []
+    end_types = []
+
+    for stream in streams:
+        reason_start = stream["play_info"]["reason_start"] 
+        reason_stop = stream["play_info"]["reason_end"]
+
+        if reason_start not in start_types:
+            start_types.append(reason_start)
+        if reason_stop not in end_types:
+            end_types.append(reason_stop)
+
+    return start_types, end_types
+    
+
+#METRICS
 
 #Returns list of (SongName, ms_listened, ArtistName, AlbumName, uri, other_uris) (sorted from least listened to most)
 def get_all_time_song_info(data, file_name):

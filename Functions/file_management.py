@@ -39,6 +39,9 @@ def _get_zip_data(filename, dataFolder, zipFolder, badFiles):
 
 #Save data to a csv, typechar is {'ll': list of "lists"}
 def save_to_csv(info, typeChar, output_file, reverse=False):
+    if not os.path.exists("./Spotify_Analysis_Files"):
+        os.mkdir("./Spotify_Analysis_Files")
+        
     if typeChar == 'll':
         with open("./Spotify_Analysis_Files/"+output_file, 'w', newline='', encoding="utf-8-sig") as f:
             csv_f = csv.writer(f)

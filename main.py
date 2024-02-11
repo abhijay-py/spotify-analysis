@@ -98,7 +98,7 @@ def main():
     pfile = constants['Playlists']
 
     #Extract data from zip
-    #get_data_from_zip(constants)
+    get_data_from_zip(constants)
 
     #Got data into two dictionaries with the data and data structure type (typeInfo might be useless, but i left it incase future needs)
     data, typeInfo = extract_data(spotifyDataFolder, pfile, streamFiles, silent=True)
@@ -121,7 +121,8 @@ def main():
     albums = [(i[0], round(i[1]/60)/1000.0, i[2]) for i in raw_albums]
 
     save_to_csv(songs, 'll', "songs.csv", reverse=True)
-
+    save_to_csv(artists, 'll', "artists.csv", reverse=True)
+    save_to_csv(albums, 'll', "albums.csv", reverse=True)
     #End Testing
 
 if __name__ == "__main__":

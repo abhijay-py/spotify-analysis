@@ -108,7 +108,7 @@ def song_info_extraction(data, file_name):
     realreference = {}
     otherUris = {}
 
-    for song in data['Streaming_History_Audio']:
+    for song in data[file_name]:
         core_data = song['main_data']
         play_info = song['play_info']
 
@@ -152,7 +152,7 @@ def uri_indexing(data, song_file_name):
     playtimeUriIndexing = {}
     similarUriIndexing = {}
     reverseUriIndexing = {}
-    mainUriTHISONE = ""
+
     for song in songs:
         mainUri = song[4]
         otherUris = song[5]
