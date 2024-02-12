@@ -1,2 +1,2 @@
-# Spotify-Analysis
- Analysis of my spotify data until 1/23/2024
+# spotify-analysis
+A webpage that delivers analytics of user's spotify data
