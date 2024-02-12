@@ -110,7 +110,35 @@ def all_time_song_info_wrapper():
     songs = [(i[0], round(i[1]/60)/1000.0, i[2]) for i in raw_songs][::-1]
     song_slice = songs[:int(len(songs) * .1)]
     return song_slice
+
+#Posts top 10% song data on url/api/song_data
+def all_time_artist_info_wrapper():
+    constants, streamFiles, spotifyDataFolder, pfile = html_wrap_constants()
+    data, typeInfo = extract_data(spotifyDataFolder, pfile, streamFiles, silent=True)
+    raw_data_handling(data, typeInfo)
+    #Got the raw song, artist, album rankings and total amount of timme listened all in ms
+    raw_artists = get_all_time_artist_info(data, constants["Stream_History_Music"])
+    artists = [(i, round(j/60)/1000.0) for i, j in raw_artists][::-1]
+    artist_slice = artists[:int(len(artists) * .1)]
+    return artist_slice
+
+#Posts top 10% song data on url/api/song_data
+def all_time_album_info_wrapper():
+    constants, streamFiles, spotifyDataFolder, pfile = html_wrap_constants()
+    data, typeInfo = extract_data(spotifyDataFolder, pfile, streamFiles, silent=True)
+    raw_data_handling(data, typeInfo)
+    #Got the raw song, artist, album rankings and total amount of timme listened all in ms
+    raw_albums = get_all_time_album_info(data, constants["Stream_History_Music"])
+    albums = [(i[0], round(i[1]/60)/1000.0, i[2]) for i in raw_albums][::-1]
+    album_slice = albums[:int(len(albums) * .1)]
+    return album_slice
     
+def artist_info_wrapper():
+    constants, streamFiles, spotifyDataFolder, pfile = html_wrap_constants()
+    data, typeInfo = extract_data(spotifyDataFolder, pfile, streamFiles, silent=True)
+    raw_data_handling(data, typeInfo)
+
+    return data["Artists"]
     
 def main():
     #Get Constants from a file

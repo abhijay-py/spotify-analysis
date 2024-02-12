@@ -18,4 +18,32 @@ paths:
       summary: "Read the list of top 10% all time song listening."
       responses:
         "200":
-          description: "Successfully read song list"
+          description: "Successfully read song list."
+  /artist_ranking:
+    get:
+      operationId: "main.artist_info_wrapper"
+      tags:
+        - "Artist Rankings Info"
+      summary: "Read the list of artists."
+      responses:
+        "200":
+          description: "Successfully read artist listening pattern list."
+  /artist_data:
+    get:
+      operationId: "main.all_time_artist_info_wrapper"
+      tags:
+        - "Artist Info"
+      summary: "Read the list of top 10% all time artist listening."
+      responses:
+        "200":
+          description: "Successfully read artist list."
+  /album_data:
+    get:
+      operationId: "main.all_time_album_info_wrapper"
+      tags:
+        - "Album Info"
+      summary: "Read the list of top 10% all time album listening."
+      responses:
+        "200":
+          description: "Successfully read album list."
+    

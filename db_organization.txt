@@ -1,0 +1,18 @@
+USER SPECIFIC TABLES
+
+Playlists:  playlist_id, ms_listened, user_id
+PlaylistTracks: playlist_id, track_id
+UserTracks: user_id, track_id, ms_listened
+UserArtists: user_id, artist_id, listening_type 
+
+STREAM TABLES
+
+StreamingInfo: stream_id,  track_id, timestamp, ms_played, reason_start, reason_end, shuffle, skipped, user_id
+StreamingPlatform: stream_id, platform, country, ip, client, offline, offline_timestamp, incognito_mode,
+StreamingEpisode: stream_id,  episode_name, episode_show, episode_id
+
+SPOTIFY WIDE TABLES
+
+Tracks: track_id, artist_id, album_id, song_name, duration, main_id,
+Artists: artist_id, name
+Albums: album_id, artist_id, name, release_data, release_type

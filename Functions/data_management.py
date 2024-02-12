@@ -107,8 +107,10 @@ def song_info_extraction(data, file_name):
     reversereference = {}
     realreference = {}
     otherUris = {}
+    count = 0
 
     for song in data[file_name]:
+        count += 1
         core_data = song['main_data']
         play_info = song['play_info']
 
@@ -143,7 +145,7 @@ def song_info_extraction(data, file_name):
 
     sortedStuff = sorted(uriTracker.items(), key=lambda x:x[1])
     sortedBetter = [(realreference[i][0], j, realreference[i][1], realreference[i][2], i, otherUris[i]) for i, j in sortedStuff]
-
+    
     return sortedBetter, total
 
 #Returns two dictionaries associating uris with the primary uri and the songs playtime. Also returns a reverse reference dict for name+artist to mainuri.
