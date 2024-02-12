@@ -38,4 +38,3 @@ def get_tracks(id_list):
     r = r.json()
     return r
 
-print(get_track("7EkWXAI1wn8Ii883ecd9xr"))

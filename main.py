@@ -1,10 +1,13 @@
 import json
 import os
 import csv
+import sqlite3
 
 from Functions.file_management import *
 from Functions.data_management import *
 from Functions.custom_metrics import *
+from Functions.spotify_api import *
+from Functions.db_management import * 
 
 
 #CORE FUNCTIONS
@@ -175,6 +178,10 @@ def main():
     save_to_csv(songs, 'll', "songs.csv", reverse=True)
     save_to_csv(artists, 'll', "artists.csv", reverse=True)
     save_to_csv(albums, 'll', "albums.csv", reverse=True)
+
+    db = constants['Db_File']
+    conn = sqlite3.connect(db)
+    initialize_db(conn, db)
     #End Testing
 
 if __name__ == "__main__":
