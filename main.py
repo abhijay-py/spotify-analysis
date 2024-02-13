@@ -153,35 +153,17 @@ def main():
     pfile = constants['Playlists']
 
     #Extract data from zip
-    get_data_from_zip(constants)
+    #get_data_from_zip(constants)
 
     #Got data into two dictionaries with the data and data structure type (typeInfo might be useless, but i left it incase future needs)
     data, typeInfo = extract_data(spotifyDataFolder, pfile, streamFiles, silent=True)
     #Fixed raw json data into better data structures
     raw_data_handling(data, typeInfo)
 
-    #Begin Testing (used to seperate standard code from testing)
-    playlist_info = get_playlist_info(data, constants["Stream_History_Music"])
-    playlist_out = [(i, round(j/60)/1000.0) for i, j in playlist_info['Vibes'][1][-10:]][::-1]
-    print(playlist_out)
-
-    #Got the raw song, artist, album rankings and total amount of timme listened all in ms
-    raw_songs, total = get_all_time_song_info(data, constants["Stream_History_Music"])
-    raw_artists = get_all_time_artist_info(data, constants["Stream_History_Music"])
-    raw_albums = get_all_time_album_info(data, constants["Stream_History_Music"])
-
-    #Converting everything into minutes (songs, artists, albums)
-    songs = [(i[0], round(i[1]/60)/1000.0, i[2]) for i in raw_songs]
-    artists = [(i, round(j/60)/1000.0) for i, j in raw_artists]
-    albums = [(i[0], round(i[1]/60)/1000.0, i[2]) for i in raw_albums]
-
-    save_to_csv(songs, 'll', "songs.csv", reverse=True)
-    save_to_csv(artists, 'll', "artists.csv", reverse=True)
-    save_to_csv(albums, 'll', "albums.csv", reverse=True)
-
     db = constants['Db_File']
     conn = sqlite3.connect(db)
-    initialize_db(conn, db)
+    add_streams(conn, data,constants["Stream_History_Music"])
+    conn.close()
     #End Testing
 
 if __name__ == "__main__":

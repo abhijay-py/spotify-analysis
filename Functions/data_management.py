@@ -87,7 +87,7 @@ def clean_streaming_audio(data, file_name):
 
         coreData = {'trackName':song['master_metadata_track_name'], 'artistName':song['master_metadata_album_artist_name'], 'albumName':song['master_metadata_album_album_name'], 'trackUri':song['spotify_track_uri']}
         streamData = {'timestamp':song['ts'], 'platform':song['platform'], 'country':song['conn_country'], 'ip':song['ip_addr_decrypted'], 'client':client, 
-                        'offline':song['offline'], 'offline_timestamp':song['offline_timestamp'], 'incognito_mode':song['incognito_mode']}
+                        'offline':song['offline'], 'offline_timestamp':song['offline_timestamp'], 'incognito_mode':song['incognito_mode'], 'username':song['username']}
         episodeData = {'episode_name':song['episode_name'], 'episode_show':song['episode_show_name'], 'episodeUri':song['spotify_episode_uri']}
         playData = {'ms_played':song['ms_played'], 'reason_start':song['reason_start'], 'reason_end':song['reason_end'], 'shuffle':song['shuffle'], 'skipped':song['skipped']}
 
