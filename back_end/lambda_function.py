@@ -143,6 +143,10 @@ def artist_info_wrapper():
     raw_data_handling(data, typeInfo)
 
     return data["Artists"]
+
+def lambda_handler():
+    print("hi")
+    return 1
     
 def main():
     #Get Constants from a file
