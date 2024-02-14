@@ -2,10 +2,7 @@ from urllib.parse import unquote
 
 #Converts any local files in playlists to a more standard format
 def convert_local_file(song):
-    try:
-        htmlcode = song["localTrack"]["uri"]
-    except:
-        return None
+    htmlcode = song["localTrack"]["uri"]
     codedData = htmlcode[14:]
     info = [htmlcode]
 
@@ -24,8 +21,6 @@ def convert_local_file(song):
 #Combines all audio streaming history into one data structure
 def combine_streaming_history(data, typeInfo, file_name):
     files = [i for i in data.keys() if i.startswith(file_name)]
-    if len(files) == 0:
-        return False
     streamingInfo = []
     typeSpecificInfo = typeInfo[files[0]]
 
@@ -36,8 +31,6 @@ def combine_streaming_history(data, typeInfo, file_name):
 
     data[file_name] = streamingInfo
     typeInfo[file_name] = typeSpecificInfo
-
-    return True
 
 #Considering converting datetime into datetime object.
 #Rearranges playlist data into an easier format. 
@@ -56,8 +49,6 @@ def clean_playlists(data, file_name):
 
             if track is None:
                 track = convert_local_file(song)
-                if track is None:
-                    continue
 
             addedDate = song["addedDate"] 
             trackDict[track["trackName"]] = {"artistName":track["artistName"], "albumName":track["albumName"], "trackUri":track["trackUri"], "episode":song["episode"], "localTrack":song["localTrack"], "addedDate":addedDate}
