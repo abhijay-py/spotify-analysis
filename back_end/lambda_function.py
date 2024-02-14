@@ -57,7 +57,7 @@ def extract_data(folder_name, playlistFile, stream_file_names, silent=False):
             data[file[:-5]] = jsonText
     
     for file_name in stream_file_names:
-        combine_streaming_history(data, typeInfo, file_name)
+        is_streaming = combine_streaming_history(data, typeInfo, file_name)
     
     try:
         data["Artists"] = data["Marquee"]
@@ -77,13 +77,14 @@ def extract_data(folder_name, playlistFile, stream_file_names, silent=False):
     except:
         pass
 
-    return data, typeInfo
+    return data, typeInfo, is_streaming
 
 #Format the data structures correctly (currently formatting: playlists, artists, streamed_music)
-def raw_data_handling(data, typeInfo, storageFile=None):
+def raw_data_handling(data, typeInfo, is_streaming, storageFile=None):
     clean_playlists(data, 'Playlists')
     adjust_artists(data, typeInfo, "Artists")
-    clean_streaming_audio(data, "Streaming_History_Audio")
+    if is_streaming:
+        clean_streaming_audio(data, "Streaming_History_Audio")
 
 #TODO: Analyze Data (might delete and just create funcctions in custom_metrics to be called in main)
 def analysis(data, typeInfo, file=None):
@@ -153,16 +154,17 @@ def main():
     pfile = constants['Playlists']
 
     #Extract data from zip
-    #get_data_from_zip(constants)
+    get_data_from_zip(constants)
 
     #Got data into two dictionaries with the data and data structure type (typeInfo might be useless, but i left it incase future needs)
-    data, typeInfo = extract_data(spotifyDataFolder, pfile, streamFiles, silent=True)
+    data, typeInfo, is_streaming = extract_data(spotifyDataFolder, pfile, streamFiles, silent=True)
     #Fixed raw json data into better data structures
-    raw_data_handling(data, typeInfo)
+    raw_data_handling(data, typeInfo, is_streaming)
+
+    print(data["Artists"])
 
     db = constants['Db_File']
     conn = sqlite3.connect(db)
-    add_streams(conn, data,constants["Stream_History_Music"])
     conn.close()
     #End Testing
 
