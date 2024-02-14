@@ -9,6 +9,18 @@ def convert_local_file(song):
     codedData = htmlcode[14:]
     info = [htmlcode]
 
+    savedText = ""
+    for c in codedData:
+        if c == ':':
+            info.append(unquote(savedText).replace("+", " "))
+            savedText = ""
+        else:
+            savedText += c
+        
+        if len(info) == 4:
+            break
+    return {"trackName":info[3], "artistName":info[1], "albumName":info[2], "trackUri":info[0]}
+
 #Combines all audio streaming history into one data structure
 def combine_streaming_history(data, typeInfo, file_name):
     files = [i for i in data.keys() if i.startswith(file_name)]
