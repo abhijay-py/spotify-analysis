@@ -161,7 +161,6 @@ def main():
     #Fixed raw json data into better data structures
     raw_data_handling(data, typeInfo, is_streaming)
 
-    print(data["Artists"])
 
     db = constants['Db_File']
     conn = sqlite3.connect(db)
