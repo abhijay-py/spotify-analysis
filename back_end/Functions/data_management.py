@@ -2,25 +2,18 @@ from urllib.parse import unquote
 
 #Converts any local files in playlists to a more standard format
 def convert_local_file(song):
-    htmlcode = song["localTrack"]["uri"]
+    try:
+        htmlcode = song["localTrack"]["uri"]
+    except:
+        return None
     codedData = htmlcode[14:]
     info = [htmlcode]
-
-    savedText = ""
-    for c in codedData:
-        if c == ':':
-            info.append(unquote(savedText).replace("+", " "))
-            savedText = ""
-        else:
-            savedText += c
-        
-        if len(info) == 4:
-            break
-    return {"trackName":info[3], "artistName":info[1], "albumName":info[2], "trackUri":info[0]}
 
 #Combines all audio streaming history into one data structure
 def combine_streaming_history(data, typeInfo, file_name):
     files = [i for i in data.keys() if i.startswith(file_name)]
+    if len(files) == 0:
+        return False
     streamingInfo = []
     typeSpecificInfo = typeInfo[files[0]]
 
@@ -28,9 +21,10 @@ def combine_streaming_history(data, typeInfo, file_name):
         streamingInfo.extend(data[file])
         del data[file]
         del typeInfo[file]
-
     data[file_name] = streamingInfo
     typeInfo[file_name] = typeSpecificInfo
+
+    return True
 
 #Considering converting datetime into datetime object.
 #Rearranges playlist data into an easier format. 
@@ -49,25 +43,21 @@ def clean_playlists(data, file_name):
 
             if track is None:
                 track = convert_local_file(song)
+                if track is None:
+                    continue
 
             addedDate = song["addedDate"] 
             trackDict[track["trackName"]] = {"artistName":track["artistName"], "albumName":track["albumName"], "trackUri":track["trackUri"], "episode":song["episode"], "localTrack":song["localTrack"], "addedDate":addedDate}
             newItems.append(trackDict)
-
         playlistDict[name] = (date, newItems)
-
     data[file_name] = playlistDict
-
 #Rearranges artist (Marquee) data into an easier format   
 def adjust_artists(data, typeInfo, file_name):
     typeInfo[file_name] = 'd'
     artistDict = {}
-
     for artist in data[file_name]:
         artistDict[artist["artistName"]] = artist["segment"]
-
     data[file_name] = artistDict
-
 #Considering converting datetime into datetime object.
 #Rearraanges song data into an easier format
 def clean_streaming_audio(data, file_name):
